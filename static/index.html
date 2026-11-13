@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🔥 Smart Fire Safety — Хакатон 2026 (Кейс 02)</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --panel: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --normal: #10b981;
+      --warning: #f59e0b;
+      --fire: #ef4444;
+      --offline: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .demo-banner {
+      background: linear-gradient(90deg, #7f1d1d, #b91c1c, #7f1d1d);
+      color: #fef2f2;
+      text-align: center;
+      padding: 8px 16px;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.4px;
+      border-bottom: 1px solid #ef4444;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 24px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .role-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn {
+      background: #0f172a;
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: 0.15s;
+    }
+    .btn:hover { border-color: #38bdf8; }
+    .btn.active { background: #2563eb; border-color: #3b82f6; }
+    .btn-warn { background: #d97706; border-color: #f59e0b; }
+    .btn-fire { background: #dc2626; border-color: #ef4444; }
+    .btn-ok { background: #059669; border-color: #10b981; }
+    .container {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+      padding: 20px 24px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .card h2 {
+      font-size: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+    .zones-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    .zone-box {
+      padding: 12px;
+      border-radius: 8px;
+      border: 2px solid var(--border);
+      background: #0f172a;
+    }
+    .zone-box.NORMAL { border-color: var(--normal); }
+    .zone-box.WARNING { border-color: var(--warning); background: rgba(245, 158, 11, 0.12); }
+    .zone-box.FIRE {
+      border-color: var(--fire);
+      background: rgba(239, 68, 68, 0.18);
+      animation: pulse 1s infinite alternate;
+    }
+    .zone-box.OFFLINE { border-color: var(--offline); opacity: 0.75; }
+    @keyframes pulse {
+      from { box-shadow: 0 0 0px rgba(239, 68, 68, 0.4); }
+      to { box-shadow: 0 0 16px rgba(239, 68, 68, 0.9); }
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .badge.NORMAL { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    .badge.WARNING { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+    .badge.FIRE { background: rgba(239, 68, 68, 0.25); color: #f87171; }
+    .badge.OFFLINE { background: rgba(100, 116, 139, 0.3); color: #cbd5e1; }
+    .log-list {
+      max-height: 360px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    .log-item {
+      padding: 6px 8px;
+      border-bottom: 1px solid #0f172a;
+    }
+    .sim-controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    select, input {
+      background: #0f172a;
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 7px 10px;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Обязательная плашка по ТЗ -->
+  <div class="demo-banner">
+    ⚠️ ДЕМО / ТЕСТОВЫЙ РЕЖИМ: Демонстрация не заменяет штатную пожарную сигнализацию и не отправляет реальные вызовы в 101/112
+  </div>
+
+  <header>
+    <div>
+      <h1 style="font-size: 18px;">🔥 Smart Fire Safety — Core API & Каркас</h1>
+      <span style="font-size: 12px; color: var(--muted);">Главный корпус №1 • Автообновление каждые 1.5 сек</span>
+    </div>
+    <!-- Переключатель ролей для Бекболата и Тоғжан -->
+    <div class="role-tabs">
+      <button class="btn active">👨‍💻 Дежурный оператор (Бекболат)</button>
+      <button class="btn">👷 Ответственный сотрудник (Тоғжан)</button>
+      <button class="btn">🔧 Техник (Тоғжан)</button>
+      <button class="btn" onclick="resetDB()">🔄 Сброс БД</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div>
+      <!-- Быстрый тест API сигналов (Точка подключения для пульта Дархана) -->
+      <div class="card">
+        <h2>
+          <span>🎛️ Быстрый тест API сигналов (POST /api/signals — для Дархана)</span>
+          <span id="last-sync" style="font-size: 12px; color: var(--muted);"></span>
+        </h2>
+        <div class="sim-controls">
+          <select id="sim-zone"></select>
+          <button class="btn btn-warn" onclick="sendTestSignal(25, 30)">🟡 Только дым 25% (WARNING)</button>
+          <button class="btn btn-fire" onclick="sendTestSignal(65, 68)">🔴 Дым 65% + Темп 68°C (FIRE)</button>
+          <button class="btn" onclick="sendBurst()">🔁 Серия 5 сигналов подряд (Анти-дубликат)</button>
+          <button class="btn" onclick="sendOffline()">🔌 Оборвать связь (OFFLINE тикет)</button>
+        </div>
+      </div>
+
+      <!-- Состояние зон из БД (Точка подключения 2D SVG-карты Бекболата) -->
+      <div class="card">
+        <h2>🗺️ Зоны здания (1 и 2 этаж — данные из GET /api/state)</h2>
+        <div id="zones-container" class="zones-grid"></div>
+      </div>
+
+      <!-- Активные тревоги и проверка дедупликации repeat_count -->
+      <div class="card">
+        <h2>🚨 Активные тревоги и карточки (Deduplication / repeat_count)</h2>
+        <div id="alarms-container"></div>
+      </div>
+    </div>
+
+    <div>
+      <!-- Тикеты и плановые проверки (для Тоғжан) -->
+      <div class="card">
+        <h2>🔧 Авто-тикеты и Плановые проверки (Inspections)</h2>
+        <div id="tickets-container" style="font-size: 13px;"></div>
+      </div>
+
+      <!-- Единый журнал действий (Audit Log) -->
+      <div class="card">
+        <h2>📜 Единый журнал действий (GET /api/audit_logs)</h2>
+        <div id="logs-container" class="log-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentZones = [];
+
+    async function fetchState() {
+      try {
+        const res = await fetch('/api/state');
+        const data = await res.json();
+        document.getElementById('last-sync').textContent = 'Обновлено: ' + data.timestamp;
+        renderZones(data.zones);
+        renderAlarms(data.alarms);
+        renderTicketsAndInspections(data.tickets, data.inspections);
+        renderLogs(data.audit_logs);
+      } catch (e) {
+        console.error('Ошибка опроса /api/state:', e);
+      }
+    }
+
+    function renderZones(zones) {
+      const sel = document.getElementById('sim-zone');
+      if (sel.options.length === 0 && zones.length > 0) {
+        zones.forEach(z => {
+          const opt = document.createElement('option');
+          opt.value = z.id;
+          opt.textContent = `Этаж ${z.floor} — ${z.name} (ID: ${z.id})`;
+          sel.appendChild(opt);
+        });
+      }
+
+      const container = document.getElementById('zones-container');
+      container.innerHTML = zones.map(z => `
+        <div class="zone-box ${z.status}">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <strong>${z.name}</strong>
+            <span class="badge ${z.status}">${z.status}</span>
+          </div>
+          <div style="font-size:12px; color:var(--muted);">Этаж ${z.floor} • Камера: ${z.camera_id}</div>
+          <div style="margin-top:8px; font-size:13px;">
+            💨 Дым: <b>${z.smoke_level}%</b> &nbsp;|&nbsp; 🌡️ Темп: <b>${z.temperature}°C</b>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderAlarms(alarms) {
+      const container = document.getElementById('alarms-container');
+      if (!alarms || alarms.length === 0) {
+        container.innerHTML = '<div style="color:var(--muted); font-size:13px;">Активных тревог нет. Все зоны в норме.</div>';
+        return;
+      }
+      container.innerHTML = alarms.map(a => `
+        <div style="border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:10px; background:#0f172a;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div>
+              <span class="badge ${a.severity}">${a.severity}</span>
+              <strong style="margin-left:6px;">Тревога #${a.id} — Этаж ${a.floor}, ${a.zone_name}</strong>
+              <span class="badge" style="background:#1e3a8a; color:#93c5fd; margin-left:6px;">
+                🔁 Повторов сигнала: ${a.repeat_count}
+              </span>
+            </div>
+            <span style="font-size:12px; color:var(--muted);">Статус: <b>${a.status}</b></span>
+          </div>
+          <div style="font-size:13px; margin:8px 0; color:#cbd5e1;">
+            Пик дыма: <b>${a.max_smoke}%</b> | Пик темп: <b>${a.max_temp}°C</b>
+            ${a.assigned_to ? ` | 👷 Назначен: <b>${a.assigned_to}</b>` : ''}
+            ${a.resolution_note ? ` | 📝 Итог: <i>${a.resolution_note}</i>` : ''}
+          </div>
+          ${['ACTIVE', 'ACKNOWLEDGED', 'ASSIGNED'].includes(a.status) ? `
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+              <button class="btn" onclick="ackAlarm(${a.id})">✋ Принять в работу (ACK)</button>
+              <button class="btn" onclick="assignAlarm(${a.id})">👷 Назначить ответственного</button>
+              <button class="btn btn-ok" onclick="resolveAlarm(${a.id}, 'RESOLVED')">🔥 Устранено (RESOLVED)</button>
+              <button class="btn" onclick="resolveAlarm(${a.id}, 'FALSE_ALARM')">💨 Ложный вызов</button>
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+    }
+
+    function renderTicketsAndInspections(tickets, inspections) {
+      const container = document.getElementById('tickets-container');
+      const openTickets = tickets.filter(t => t.status === 'OPEN');
+      let html = '<div style="margin-bottom:10px;"><strong>🔌 Открытые OFFLINE-тикеты:</strong></div>';
+      if (openTickets.length === 0) {
+        html += '<div style="color:var(--muted); margin-bottom:12px;">Все устройства на связи (ONLINE).</div>';
+      } else {
+        html += openTickets.map(t => `
+          <div style="padding:8px; background:#0f172a; border:1px solid var(--border); border-radius:6px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <b>#${t.id} ${t.zone_name}</b>: ${t.description}
+            </div>
+            <button class="btn btn-ok" onclick="fixTicket(${t.id})">Починить</button>
+          </div>
+        `).join('');
+      }
+
+      html += '<div style="margin:12px 0 6px;"><strong>📅 Плановые проверки (Inspections):</strong></div>';
+      html += inspections.map(i => `
+        <div style="padding:6px 8px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <span class="badge ${i.status === 'OVERDUE' ? 'FIRE' : (i.status === 'COMPLETED' ? 'NORMAL' : 'WARNING')}">${i.status}</span>
+            <b>${i.zone_name}</b>: ${i.title} (${i.scheduled_date})
+          </div>
+          ${i.status !== 'COMPLETED' ? `<button class="btn" style="padding:4px 8px; font-size:11px;" onclick="completeInspection(${i.id})">✓ Выполнено</button>` : ''}
+        </div>
+      `).join('');
+      container.innerHTML = html;
+    }
+
+    function renderLogs(logs) {
+      const container = document.getElementById('logs-container');
+      container.innerHTML = logs.map(l => `
+        <div class="log-item">
+          <span style="color:var(--muted);">[${l.timestamp.slice(11)}]</span>
+          <strong style="color:#38bdf8;">${l.actor}:</strong>
+          <span>${l.details}</span>
+        </div>
+      `).join('');
+    }
+
+    async function sendTestSignal(smoke, temp) {
+      const zoneId = Number(document.getElementById('sim-zone').value || 5);
+      await fetch('/api/signals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ zone_id: zoneId, smoke, temperature: temp })
+      });
+      fetchState();
+    }
+
+    async function sendBurst() {
+      const zoneId = Number(document.getElementById('sim-zone').value || 5);
+      for (let i = 0; i < 5; i++) {
+        await fetch('/api/signals', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ zone_id: zoneId, smoke: 60 + i * 3, temperature: 65 + i })
+        });
+      }
+      fetchState();
+    }
+
+    async function sendOffline() {
+      const zoneId = Number(document.getElementById('sim-zone').value || 5);
+      await fetch('/api/devices/offline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ zone_id: zoneId, type: 'smoke' })
+      });
+      fetchState();
+    }
+
+    async function ackAlarm(id) {
+      await fetch(`/api/alarms/${id}/ack`, { method: 'POST' });
+      fetchState();
+    }
+
+    async function assignAlarm(id) {
+      await fetch(`/api/alarms/${id}/assign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assigned_to: 'Ответственный (Нурлан С.)' })
+      });
+      fetchState();
+    }
+
+    async function resolveAlarm(id, type) {
+      const comment = type === 'FALSE_ALARM' ? 'Ложный вызов (пар/пыль), проверено' : 'Малое возгорание устранено';
+      await fetch(`/api/alarms/${id}/resolve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resolution_type: type, comment })
+      });
+      fetchState();
+    }
+
+    async function fixTicket(id) {
+      await fetch(`/api/tickets/${id}/fix`, { method: 'POST' });
+      fetchState();
+    }
+
+    async function completeInspection(id) {
+      await fetch(`/api/inspections/${id}/complete`, { method: 'POST' });
+      fetchState();
+    }
+
+    async function resetDB() {
+      await fetch('/api/reset', { method: 'POST' });
+      fetchState();
+    }
+
+    fetchState();
+    setInterval(fetchState, 1500);
+  </script>
+</body>
+</html>
