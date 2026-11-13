@@ -41,3 +41,5 @@ python3 app.py        # запуск сервера на http://127.0.0.1:5000
 * `POST /api/tickets/<id>/fix` — Техник восстанавливает связь с датчиком.
 * `POST /api/inspections` и `POST /api/inspections/<id>/complete` — Управление графиком плановых проверок.
 * `POST /api/reset` — Полный сброс базы данных к начальному состоянию перед демонстрацией жюри.
+
+# govtech
